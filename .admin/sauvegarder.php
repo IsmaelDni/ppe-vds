@@ -7,7 +7,7 @@ chdir(__DIR__ . '/..');
 echo "Sauvegarde du dépôt local vers GitHub en cours...\n";
 
 // Désactiver les messages d'avertissement sur les fichiers ignorés
-//  exec('git config advice.addIgnoredFile false');
+exec('git config advice.addIgnoredFile false');
 
 // Configurer Git pour créer automatiquement le lien de suivi distant lors du premier push
 exec('git config --global push.autoSetupRemote true');
