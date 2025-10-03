@@ -1,5 +1,6 @@
 -- réinitialisation des tables
 -- suppression des données dans l'ordre des dépendances (contrainte de clé étrangère) évite le recours à set foreign_key_checks = 0;
+use ppe;
 delete from droit;
 delete from fonction;
 delete from administrateur;

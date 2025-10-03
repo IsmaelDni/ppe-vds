@@ -1,0 +1,88 @@
+Je vais d'abord marquer la tâche UI comme en cours, puis créer les trois pages admin (index.html, ajout.html, modifier.html) et le JavaScript associé pour lister, ajouter, modifier et supprimer partenaires en appelant les endpoints que nous avons ajoutés. Résultat attendu : interface admin fonctionnelle côté front (HTML + JS). Je commence par vérifier l'existence du dossier et des fichiers.
+
+Searched for files matching **/administration/partenaire/*.html, no matches
+
+Starting (3/5) Add admin UI pages
+
+I'll create partenaire directory and add index.html, ajout.html, and modifier.html with JS: index lists partners via partenaire_liste.php and offers edit/delete; ajout submits form to partenaire_ajouter.php including file upload; modifier fetches partner data (we'll reuse list and prefill the form) and submits changes via partenaire_modifier.php. I'll implement files now.
+
+Created partenaire
+
+Created index.html
+
+Created ajout.html
+
+Created modifier.html
+
+Progress update: created admin UI pages (index, ajout, modifier). Next I'll run a quick error check for the new files.
+
+Checked index.html, ajout.html, modifier.html, partenaire.php, partenaire_ajouter.php, partenaire_modifier.php, partenaire_supprimer.php, partenaire_liste.php, no problems found
+
+Je crée maintenant l’UI d’administration des partenaires (index/ajout/modifier) et le JS qui appelle les endpoints backend — c’est fait.
+
+Récapitulatif rapide des fichiers ajoutés
+
+index.html — liste tous les partenaires, boutons Modifier et Supprimer (appels à partenaire_liste.php et /ajax/partenaire_supprimer.php)
+ajout.html — formulaire d’ajout (nom, url, fichier) qui POSTe vers partenaire_ajouter.php
+modifier.html — formulaire de modification pré-rempli (récupère la ligne via /ajax/partenaire_liste.php) et POST vers partenaire_modifier.php (gère optionnellement le fichier)
+Vérifications effectuées
+
+J’ai exécuté un contrôle d’erreurs pour les nouveaux fichiers : aucun problème détecté par l’analyse statique locale disponible.
+Les endpoints backend (ajax/partenaire_*.php) et la classe partenaire.php existent et suivent les conventions du projet (Table, InputFileImg).
+Notes d’intégration et points à tester
+
+N’oubliez pas d’exécuter le SQL de migration partenaire.sql pour créer la table.
+Vérifiez que le répertoire partenaire existe et est accessible en écriture par PHP.
+Le formulaire d’ajout et le formulaire de modification envoient le fichier via multipart/form-data ; le backend s’appuie sur InputFileImg pour vérifier la hauteur (<=100px) et la taille (<=30Ko). Si vous rencontrez une erreur liée à upload_max_filesize ou post_max_size, ajustez ces paramètres dans php.ini.
+Le code de modification envoie lesValeurs JSON et éventuellement le fichier dans FormData. Le Table->update d'origine gère la mise à jour et la suppression/ajout du fichier si le InputFile est présent.
+Envie d’un test rapide automatisé ou je vous guide pour tester localement ?
+
+Je peux écrire un petit script PHP de test (simulateur POST multipart) pour valider : ajout valide, ajout avec image trop grande, modification, suppression.
+Ou je vous fournis la checklist et les commandes cURL / PowerShell pour tester depuis votre poste.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Je viens d’implémenter les endpoints backend demandés et la classe métier nécessaire.
+
+Ce que j’ai ajouté
+
+partenaire.php — classe Partenaire (hérite de Table) avec colonnes :
+nom (InputText, obligatoire)
+url (InputUrl, optionnel)
+fichier (InputFileImg configuré : extensions jpg/png, types mime usuels, maxSize = 30*1024, height = 100, répertoire partenaire)
+partenaire_ajouter.php — ajoute un partenaire (utilise Table->insert(), qui gère la copie du fichier si présent)
+partenaire_modifier.php — modifie un partenaire (utilise Table->update())
+partenaire_supprimer.php — supprime un partenaire (supprime aussi le fichier via Table->delete())
+partenaire_liste.php — renvoie la liste des partenaires en JSON
+Rappel : la migration SQL pour la table partenaire a déjà été créée plus tôt sous partenaire.sql (si vous l’avez conservée).
+Points d’intégration / vérifications
+
+Table SQL : exécutez partenaire.sql sur votre base MySQL pour créer la table avant d’utiliser les endpoints.
+Vérifiez que le répertoire partenaire existe et que le serveur web a les droits d’écriture.
+Les endpoints reprennent les conventions existantes (autoloader, Table, InputFileImg). Les erreurs sont renvoyées en JSON comme dans le reste de la base.
+PHP ini : assurez-vous que upload_max_filesize et post_max_size autorisent au moins 30 Ko.
+Prochaines actions proposées (choisissez une)
+
+Je crée l’UI admin (pages administration/partenaire/index.html, ajout.html, modifier.html) et le JavaScript pour appeler ces endpoints.
+J’ajoute l’affichage public des partenaires sur la page d’accueil (lecture via partenaire_liste.php).
+J’écris quelques tests rapides (script PHP ou PHPUnit) pour valider upload valide / upload invalide.
+Rien d’autre, vous testez et me dites les retours.
+Que voulez-vous que je fasse maintenant ?
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+J’ai ajouté la table et le script de migration pour la table partenaire.
+
+Ce que j'ai créé
+
+partenaire.sql — script SQL pour créer la table :
+champs : id (AUTO_INCREMENT PK), nom (VARCHAR 255 NOT NULL), url (VARCHAR 1024 NULL), fichier (VARCHAR 255 NULL), created_at TIMESTAMP.
+commentaire dans le fichier rappelant que les logos seront stockés dans partenaire et les contraintes applicatives (jpg/png, hauteur ≤100px, taille ≤30Ko).
+Prochaines étapes possibles (dites laquelle vous voulez que je fasse ensuite)
+
+Créer les endpoints backend (ajout/modif/suppression/list) — je peux les implémenter en respectant les helpers existants (Table, InputFileImg).
+Ajouter la classe métier classemetier/partenaire.php qui mappe la table (si vous souhaitez automatiser l’upload via la couche Table).
+Ajouter l’UI admin (index/ajout/modif) et intégrer l’affichage public sur la page d’accueil.
+Si vous préférez, je peux aussi simplement fournir les commandes SQL et instructions pour l’exécuter sur votre base.
+Voulez-vous que je crée aussi la table via la classe métier et les endpoints maintenant ?

@@ -1,3 +1,8 @@
+<?php
+structure::verifier();
+$mention = Page::getMentions();
+$politique = Page::getPolitique();
+?>
 <!DOCTYPE HTML>
 <html lang="fr">
 <head>
