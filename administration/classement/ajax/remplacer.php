@@ -2,9 +2,8 @@
 // activation du chargement dynamique des ressources
 require $_SERVER['DOCUMENT_ROOT'] . '/include/autoload.php';
 
-
 // contrôle de l'existence des paramètres attendus
-if (!isset($_FILES['fichier']) || !isset($_POST['nomFichier'])) {
+if (!isset($_FILES['fichier'], $_POST['nomFichier'])) {
     Erreur::envoyerReponse("Paramètre manquant", 'global');
 }
 
@@ -12,7 +11,7 @@ if (!isset($_FILES['fichier']) || !isset($_POST['nomFichier'])) {
 $lesParametres = Classement::getConfig();
 
 // instanciation et paramétrage d'un objet InputFile
-$file = new InputFile($lesParametres);
+$file = new InputFile($_FILES['fichier'], $lesParametres);
 $file->Value = $_POST['nomFichier'];
 
 // ici le fichier existe déjà, il faut passer en mode 'update' pour autoriser son remplacement

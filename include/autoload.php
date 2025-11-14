@@ -49,7 +49,8 @@ if ($dernierRepertoire === 'ajax') {
     header('Content-Type: application/json; charset=utf-8');
 } else {
     // Pour les autres pages, créer un jeton CSRF valable pour 10 minutes
-    Jeton::creer(600);
+    Jeton::creer();
+
     // Tous les autres scripts renvoient du HTML
     header('Content-Type: text/html; charset=utf-8');
 }

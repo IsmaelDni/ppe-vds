@@ -3,6 +3,22 @@ declare(strict_types=1);
 
 class Partenaire extends Table
 {
+
+    private const CONFIG = [
+        'repertoire' => '/data/partenaire',
+        'extensions' => ["jpg", "png"],
+        'types' => ["image/pjpeg", "image/jpeg", "x-png", "image/png"],
+        'maxSize' => 150 * 1024,
+        'require' => false,
+        'rename' => true,
+        'sansAccent' => true,
+        'redimensionner' => false,
+        'height' => 0,
+        'width' => 350,
+        'accept' => '.jpg, .png',
+        'label' => '(150 Ko max, jpg ou png)',
+        ];
+
     public function __construct()
     {
         parent::__construct('partenaire');
@@ -20,28 +36,14 @@ class Partenaire extends Table
         $input->MaxLength = 1024;
         $this->columns['url'] = $input;
 
-        // fichier (logo)
-        $config = [
-            'repertoire' => '/data/partenaire',
-            'extensions' => ['jpg', 'png'],
-            'types' => ['image/pjpeg', 'image/jpeg', 'x-png', 'image/png'],
-            'maxSize' => 30 * 1024,
-            'require' => false,
-            'rename' => true,
-            'sansAccent' => true,
-            'accept' => '.jpg, .png',
-            'redimensionner' => false,
-            'height' => 100,
-            'width' => 0,
-            'label' => 'Logo jpg ou png (hauteur max 100px, taille max 30 Ko)'
-        ];
-
-        $input = new InputFileImg($config);
-        $input->Require = false;
-        $input->Rename = true;
-        $this->columns['fichier'] = $input;
+        
     }
+    private const DIR = RACINE . '/data/partenaire/';
 
+    
+        public static function getConfig(): array {
+        return self::CONFIG;
+        }
     public static function getAll(): array
     {
         $sql = "SELECT id, nom, url, fichier FROM partenaire ORDER BY nom";
@@ -49,10 +51,52 @@ class Partenaire extends Table
         return $select->getRows($sql);
     }
 
-    public static function getPartenaire(): string
+        public static function getById(int $id): ?array
     {
-        $select = new select();
-        return $select->getValue("select contenu from page where id = 1;");
+        $sql = "SELECT id, nom, url, fichier FROM partenaire WHERE id = :id";
+        $select = new Select();
+        return $select->getRow($sql, ['id' => $id]);
     }
+
+    /**
+     * Supprime un partenaire
+     * @param int $id
+     * @return bool
+     */
+    public static function supprimer(int $id): void
+    {
+        $db = Database::getInstance();
+        $sql = "delete from partenaire where id = :id;";
+        $cmd = $db->prepare($sql);
+        $cmd->bindValue('id', $id);
+        try {
+            $cmd->execute();
+        } catch (Exception $e) {
+            Erreur::traiterReponse($e->getMessage());
+        }
+    }
+
+    public static function supprimerFichier(string $fichier): void
+    {
+        $chemin = self::DIR . '/' . $fichier;
+        if (is_file($chemin)) {
+            unlink($chemin);
+        }
+    }
+
+   public static function majLogo(int $id, string $logo): void
+    {
+        $sql = "update partenaire set fichier = :logo where id = :id;";
+        $db = Database::getInstance();
+        $cmd = $db->prepare($sql);
+        $cmd->bindValue('id', $id);
+        $cmd->bindValue('fichier', $logo);
+        try {
+            $cmd->execute();
+        } catch (Exception $e) {
+            Erreur::traiterReponse($e->getMessage());
+        }
+    }
+
 
 }

@@ -14,8 +14,9 @@ $lesClassements = json_encode(Classement::getAll());
 $prochaineEdition = json_encode(Epreuve::getProchaineEpreuve());
 // récupération du contenu de la page mentions légales et de la politique de confidentialité
 // pour l'affichage dans le pied de page
-$mention = Page::getMentions();
-$politique = Page::getPolitique();
+
+// --- Ajout : chargement des partenaires côté serveur (méthode GET) ---
+$lesPartenaires = json_encode(Partenaire::getAll());
 
 
 // transmission des données à l'interface
@@ -23,6 +24,7 @@ $head = <<<HTML
     <script>
         const prochaineEdition = $prochaineEdition;
         const lesClassements = $lesClassements;
+        const lesPartenaires = $lesPartenaires;
     </script>
 HTML;
 

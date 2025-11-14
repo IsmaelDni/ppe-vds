@@ -1,108 +1,209 @@
 "use strict";
 
+// -----------------------------------------------------------------------------------
+// Import des fonctions nécessaires
+// -----------------------------------------------------------------------------------
+
 import {appelAjax} from "/composant/fonction/ajax.js";
 import {confirmer, messageBox, corriger} from "/composant/fonction/afficher.js";
-import {creerBoutonSuppression, creerBoutonModification} from "/composant/fonction/formulaire.js";
+import {
+    fichierValide, effacerLesErreurs,
+    creerBoutonSuppression, creerBoutonRemplacer
+} from "/composant/fonction/formulaire.js";
 
-/* global lesPartenaires */
+// -----------------------------------------------------------------------------------
+// Déclaration des variables globales
+// -----------------------------------------------------------------------------------
 
+/* global lesPartenaires, lesParametres */
+
+
+
+// ajouter : conserver l'id du partenaire en cours de remplacement
+let idEnCours;
+
+// récupération des éléments sur l'interface
 const lesLignes = document.getElementById('lesLignes');
+const logo = document.getElementById('logo');
 const nb = document.getElementById('nb');
 
-nb.innerText = lesPartenaires.length;
+// -----------------------------------------------------------------------------------
+// Procédures évènementielles
+// -----------------------------------------------------------------------------------
 
-for (const element of lesPartenaires) {
-    const id = element.id;
-    const tr = document.createElement('tr');
-    tr.id = 'p-' + id;
-
-    // logo
-    const tdLogo = document.createElement('td');
-    tdLogo.style.textAlign = 'center';
-    if (element.fichier) {
-        const img = document.createElement('img');
-        img.src = '/data/partenaire/' + element.fichier;
-        img.style.height = '50px';
-        tdLogo.appendChild(img);
+// sur la sélection d'un logo
+logo.onchange = () => {
+    effacerLesErreurs();
+    if (logo.files.length > 0) {
+        let file = logo.files[0];
+        if (fichierValide(file, lesParametres)) {
+            remplacer(file);
+        }
     }
-    tr.appendChild(tdLogo);
+};
 
-    // nom (editable)
-    const tdNom = document.createElement('td');
-    const inputNom = document.createElement('input');
-    inputNom.type = 'text';
-    inputNom.value = element.nom;
-    inputNom.dataset.old = element.nom;
-    inputNom.onchange = function () {
-        if (this.value !== this.dataset.old) {
-            appelAjax({
-                url: '/ajax/modifier.php',
-                data: {
-                    table: 'partenaire',
-                    id: id,
-                    lesValeurs: JSON.stringify({nom: this.value})
-                },
-                success: () => {
-                    this.dataset.old = this.value;
-                    this.style.color = 'green';
-                }
-            });
-        }
-    };
-    tdNom.appendChild(inputNom);
-    tr.appendChild(tdNom);
+// -----------------------------------------------------------------------------------
+// Fonctions de traitement
+// -----------------------------------------------------------------------------------
 
-    // url (editable)
-    const tdUrl = document.createElement('td');
-    const inputUrl = document.createElement('input');
-    inputUrl.type = 'url';
-    inputUrl.value = element.url || '';
-    inputUrl.dataset.old = element.url || '';
-    inputUrl.onchange = function () {
-        if (this.value !== this.dataset.old) {
-            appelAjax({
-                url: '/ajax/modifier.php',
-                data: {
-                    table: 'partenaire',
-                    id: id,
-                    lesValeurs: JSON.stringify({url: this.value})
-                },
-                success: () => {
-                    this.dataset.old = this.value;
-                    this.style.color = 'green';
-                }
-            });
-        }
-    };
-    tdUrl.appendChild(inputUrl);
-    tr.appendChild(tdUrl);
-
-    // actions
-    const tdActions = document.createElement('td');
-    tdActions.style.textAlign = 'center';
-    const container = document.createElement('div');
-    container.style.display = 'flex';
-    container.style.gap = '8px';
-    container.style.justifyContent = 'center';
-
-    const supprimer = () => appelAjax({
-        url: '/ajax/partenaire_supprimer.php',
-        data: {id: id},
+function remplacer(file) {
+    if (!idEnCours) {
+        messageBox("Identifiant du partenaire manquant", "error");
+        return;
+    }
+    // transfert du fichier vers le serveur dans le répertoire sélectionné
+    const formData = new FormData();
+    formData.append('logo', file);
+    formData.append('id', idEnCours);     // <-- envoi de l'id attendu par le PHP
+    appelAjax({
+        url: 'ajax/remplacer.php',
+        data: formData,
         success: () => {
-            tr.remove();
-            nb.innerText = parseInt(nb.innerText) - 1;
-            messageBox('Partenaire supprimé');
+            messageBox("Logo remplacé avec succès");
+            // réinitialiser l'id en cours
+            idEnCours = null;
+            // Recharger la page pour afficher le nouveau logo
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: (m) => {
+            messageBox(m || 'Erreur lors de l\'upload', 'error');
         }
     });
+}
 
-    const btnSupprimer = creerBoutonSuppression(() => confirmer(supprimer));
+/**
+ * Demande de modification de la valeur d'une colonne
+ * @param {string} colonne
+ * @param {object} input balise input
+ * @param {int} id identifiant du partenaire à modifier
+ */
+function modifierColonne(colonne, input, id) {
+    appelAjax({
+        url: '/ajax/modifiercolonne.php',
+        data: {
+            table: 'partenaire',
+            colonne: colonne,
+            valeur: input.value,
+            id: id
+        },
+        success: () => {
+            input.style.color = 'green';
+            // modifier l'ancienne valeur
+            input.dataset.old = input.value;
+        },
+        error: (message) => {
+            input.style.color = 'red';
+            messageBox(message, 'error');
+        }
+    });
+}
+
+// -----------------------------------------------------------------------------------
+// Programme principal
+// -----------------------------------------------------------------------------------
+
+logo.accept = lesParametres.accept;
+nb.innerText = lesPartenaires.length;
+
+// afficher le tableau des partenaires
+for (const p of lesPartenaires) {
+    let id = p.id;
+    let tr = lesLignes.insertRow();
+    tr.style.verticalAlign = 'middle';
+    tr.id = p.id;
+
+    // 1. Colonne des actions (remplacer logo / supprimer)
+    const tdAction = document.createElement('td');
+    const container = document.createElement('div');
+    Object.assign(container.style, {
+        display: 'flex',
+        gap: '8px',
+        alignItems: 'center'
+    });
+
+     const actionRemplacer = () => {
+        // mémorise l'id avant d'ouvrir le file picker
+        idEnCours = id;
+        logo.click();
+    };
+    const btnRemplacer = creerBoutonRemplacer(actionRemplacer)
+    container.appendChild(btnRemplacer);
+
+    // ajout de l'icone de suppression
+    const supprimer = () =>
+        appelAjax({
+            url: 'ajax/supprimer.php',
+            data: {
+                id: id
+            },
+            success: () => {
+                tr.remove();
+                nb.innerText = parseInt(nb.innerText) - 1;
+            }
+        });
+    const actionSupprimer = () => confirmer(supprimer, "Voulez-vous vraiment supprimer ce partenaire ?");
+    const btnSupprimer = creerBoutonSuppression(actionSupprimer);
     container.appendChild(btnSupprimer);
 
-    const btnModifier = creerBoutonModification(() => window.location.href = 'modifier.html?id=' + id);
-    container.appendChild(btnModifier);
+    tdAction.appendChild(container);
+    tr.appendChild(tdAction);
 
-    tdActions.appendChild(container);
-    tr.appendChild(tdActions);
+    // deuxième colonne : le logo
+    const tdLogo = tr.insertCell();
+    if (p.fichier) {
+        const img = document.createElement('img');
+        img.src = p.fichier ? '/data/partenaire/' + p.fichier : '/data/partenaire/.keep';
+        img.alt = p.nom || '';
+        img.style.maxHeight = '50px';
+        img.style.maxWidth = '120px';
+        img.style.objectFit = 'contain';
+        tdLogo.appendChild(img);
+    } else {
+        tdLogo.innerHTML = '<span class="text-muted">Aucun logo</span>';
+    }
 
-    lesLignes.appendChild(tr);
+    // troisième colonne : le nom du partenaire qui peut être directement modifié
+    let nom = document.createElement("input");
+    nom.type = 'text';
+    nom.className = 'form-control';
+    nom.maxLength = 255;
+    nom.minLength = 2;
+    nom.required = true;
+    nom.value = p.nom;
+    nom.dataset.old = p.nom;
+    nom.onkeydown = (e) => !/[<>]/.test(e.key);
+    nom.onchange = function () {
+        if (this.value !== this.dataset.old) {
+            if (this.checkValidity()) {
+                modifierColonne('nom', this, id);
+            } else {
+                corriger(this);
+            }
+        }
+    };
+    tr.insertCell().appendChild(nom);
+
+    // quatrième colonne : l'URL qui peut être directement modifiée
+    let url = document.createElement("input");
+    url.type = 'url';
+    url.className = 'form-control';
+    url.maxLength = 1024;
+    url.value = p.url || '';
+    url.dataset.old = p.url || '';
+    url.placeholder = "https://example.com";
+    url.onchange = function () {
+        if (this.value !== this.dataset.old) {
+            // Ajouter https:// si manquant
+            if (this.value && !this.value.startsWith('http')) {
+                this.value = 'https://' + this.value;
+            }
+            
+            if (this.checkValidity() || this.value === '') {
+                modifierColonne('url', this, id);
+            } else {
+                corriger(this);
+            }
+        }
+    };
+    tr.insertCell().appendChild(url);
 }

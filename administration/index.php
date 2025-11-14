@@ -10,7 +10,6 @@ if (!isset($_SESSION['membre']) || !Administrateur::estUnAdministrateur($_SESSIO
 
 // chargement des données
 $data = json_encode(Administrateur::getLesFonctionsAutorisees($_SESSION['membre']['id']));
-
 // transmission des données à l'interface
 $head = <<<HTML
     <script>

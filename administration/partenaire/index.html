@@ -1,68 +1,20 @@
-<div class="m-1" style="width: 72rem">
-    <div class="d-flex  justify-content-between mb-3">
+<div class="m-1" style="width: 52rem">
+    <div class="d-flex justify-content-between mb-3">
         <p>Nombre de partenaires : <span id="nb" class="fw-bold text-success"></span></p>
-        <a href="ajout.html" class="btn btn-outline-danger mb-3">Ajouter un partenaire</a>
+        <a href="ajout.php" class="btn btn-outline-danger mb-3">Ajouter un partenaire</a>
     </div>
-
-    <table style="margin : auto; width:100%">
+    
+    <input type="file" id="logo" accept="" style='display: none'>
+    
+    <table style="margin: auto" class="table table-striped">
         <thead>
         <tr>
-            <th style='width:150px'>Logo</th>
-            <th style="width:300px">Nom</th>
-            <th style="width:400px">Url</th>
-            <th style="width:150px">Actions</th>
+            <th style='width: 130px'>Actions</th>
+            <th style="width: 150px">Logo</th>
+            <th style="width: 300px">Nom</th>
+            <th style="width: 400px">URL</th>
         </tr>
         </thead>
         <tbody id="lesLignes"></tbody>
     </table>
 </div>
-<!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <title>Administration - Partenaires</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-  <h1>Gestion des partenaires</h1>
-  <p><a href="ajout.html">Ajouter un partenaire</a></p>
-
-  <div id="messages"></div>
-  <table id="table" border="1" style="width:100%;border-collapse:collapse">
-    <thead>
-      <tr><th>Logo</th><th>Nom</th><th>Url</th><th>Actions</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <script>
-    async function load() {
-      const res = await fetch('/ajax/partenaire_liste.php');
-      const json = await res.json();
-      const tbody = document.querySelector('#table tbody');
-      tbody.innerHTML = '';
-      json.rows.forEach(r => {
-        const tr = document.createElement('tr');
-        const logo = r.fichier ? `<img src="/data/partenaire/${r.fichier}" style="height:50px">` : '';
-        tr.innerHTML = `<td>${logo}</td><td>${r.nom}</td><td>${r.url ? '<a href="'+r.url+'" target="_blank">'+r.url+'</a>' : ''}</td><td><button data-id="${r.id}" class="edit">Modifier</button> <button data-id="${r.id}" class="del">Supprimer</button></td>`;
-        tbody.appendChild(tr);
-      });
-      document.querySelectorAll('.del').forEach(b => b.addEventListener('click', async e => {
-        if (!confirm('Confirmer la suppression ?')) return;
-        const id = e.target.dataset.id;
-        const fd = new FormData(); fd.append('id', id);
-        const resp = await fetch('/ajax/partenaire_supprimer.php', {method:'POST', body: fd});
-        const j = await resp.json();
-        document.getElementById('messages').textContent = j.success || JSON.stringify(j);
-        load();
-      }));
-      document.querySelectorAll('.edit').forEach(b => b.addEventListener('click', e => {
-        const id = e.target.dataset.id;
-        window.location.href = 'modifier.html?id=' + id;
-      }));
-    }
-    load();
-  </script>
-</body>
-</html>

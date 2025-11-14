@@ -9,3 +9,5 @@
 26/09/2025 13:43:37	Le fichier structure.json est invalide.	/index.php	::1
 26/09/2025 13:46:19	Le fichier structure.json est invalide.	/index.php	::1
 26/09/2025 13:46:21	Le fichier structure.json est invalide.	/index.php	::1
+07/11/2025 13:49:59	global	/administration/partenaire/ajax/remplacer.php	::1
+14/11/2025 15:15:29	Partenaire::majLogo(): Argument #1 ($id) must be of type int, null given, called in J:\VirtualHostSlam\ppe-vds\administration\partenaire\ajax\remplacer.php on line 33	/administration/partenaire/ajax/remplacer.php	::1
