@@ -56,25 +56,50 @@ for (const element of lesClassements) {
     // -----------------------------------------------------------------------------
     // Affichage des partenaires fournis par le serveur (injection via index.php)
     // -----------------------------------------------------------------------------
-    function afficherPartenairesServeur() {
+
+function afficherPartenairesServeur() {
     if (!container) return;
     try {
         container.innerHTML = '';
         if (typeof lesPartenaires === 'undefined' || !Array.isArray(lesPartenaires) || lesPartenaires.length === 0) return;
+
+        // intersection observer pour animer à l'apparition
+        const observer = ('IntersectionObserver' in window) ? new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.classList.add('in-view', 'pop');
+                    // retirer la classe pop après animation pour conserver un état propre
+                    setTimeout(() => img.classList.remove('pop'), 700);
+                    obs.unobserve(img);
+                }
+            });
+        }, { threshold: 0.15 }) : null;
+
         for (const p of lesPartenaires) {
             const a = document.createElement('a');
             a.href = p.url || '#';
             a.target = '_blank';
             a.style.display = 'inline-block';
             a.style.margin = '6px';
+
             const img = document.createElement('img');
             img.src = p.fichier ? '/data/partenaire/' + p.fichier : '/data/partenaire/.keep';
             img.alt = p.nom || '';
+            img.classList.add('partenaire-img'); // classe pour styles/animations
             img.style.maxHeight = '100px';
             img.style.height = 'auto';
             img.style.display = 'block';
+
             a.appendChild(img);
             container.appendChild(a);
+
+            // observer ou fallback instantané
+            if (observer) {
+                observer.observe(img);
+            } else {
+                img.classList.add('in-view');
+            }
         }
     } catch (e) {
         console.error('Erreur affichage partenaires', e);

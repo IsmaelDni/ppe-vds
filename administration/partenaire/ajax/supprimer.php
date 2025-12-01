@@ -9,16 +9,16 @@ if (!isset($_POST['id'])) {
 
 $id = $_POST['id'];
 
-// vérification de l'existence du classement:
-$ligne = partenaire::getById($id);
-if (!$ligne) {
-    Erreur::envoyerReponse("Ce classement: n'existe pas", 'global');
-}
+$partenaire = Partenaire::getById($id);
 
-// suppression de l'enregistrement en base de données
+// s'assurer qu'il y a bien un nom de fichier avant d'appeler la suppression de fichier
+if (!empty($partenaire['fichier'])) {
+    Partenaire::supprimerFichier($partenaire['fichier']);
+}
+// suppression de l'enregistrement
 Partenaire::supprimer($id);
 
-Partenaire::supprimerFichier($ligne['fichier']);
+
 
 
 $reponse = ['success' => "Le classement: a été supprimé"];

@@ -1,5 +1,5 @@
 AuthType Basic
-AuthUserFile "j:/VirtualHostSlam/ppe-vds/backoffice/.htpasswd"
+AuthUserFile "C:\Users\Ismae\Documents\informatique\ppe-vds\backoffice"
 AuthName "Administration"
 require valid-user
 

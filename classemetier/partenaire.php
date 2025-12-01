@@ -6,18 +6,18 @@ class Partenaire extends Table
 
     private const CONFIG = [
         'repertoire' => '/data/partenaire',
-        'extensions' => ["jpg", "png"],
-        'types' => ["image/pjpeg", "image/jpeg", "x-png", "image/png"],
+        'extensions' => ["jpg", "png", "webp", "avif"],
+        'types' => ["image/pjpeg", "image/jpeg", "x-png", "image/png", "image/webp", "image/avif"],
         'maxSize' => 150 * 1024,
         'require' => false,
         'rename' => true,
         'sansAccent' => true,
         'redimensionner' => false,
-        'height' => 0,
+        'height' => 150,
         'width' => 350,
         'accept' => '.jpg, .png',
         'label' => '(150 Ko max, jpg ou png)',
-        ];
+    ];
 
     public function __construct()
     {
@@ -26,24 +26,24 @@ class Partenaire extends Table
         // nom
         $input = new InputText();
         $input->Require = true;
-        $input->MaxLength = 255;
         $input->MinLength = 2;
         $this->columns['nom'] = $input;
 
         // url
         $input = new InputUrl();
         $input->Require = false;
-        $input->MaxLength = 1024;
         $this->columns['url'] = $input;
 
-        
+        // définition des colonnes modifiables en mode colonne
+        $this->listOfColumns->Values = ['nom', 'url'];
     }
     private const DIR = RACINE . '/data/partenaire/';
 
-    
-        public static function getConfig(): array {
+
+    public static function getConfig(): array
+    {
         return self::CONFIG;
-        }
+    }
     public static function getAll(): array
     {
         $sql = "SELECT id, nom, url, fichier FROM partenaire ORDER BY nom";
@@ -51,7 +51,7 @@ class Partenaire extends Table
         return $select->getRows($sql);
     }
 
-        public static function getById(int $id): ?array
+    public static function getById(int $id): ?array
     {
         $sql = "SELECT id, nom, url, fichier FROM partenaire WHERE id = :id";
         $select = new Select();
@@ -76,21 +76,26 @@ class Partenaire extends Table
         }
     }
 
-    public static function supprimerFichier(string $fichier): void
+    public static function supprimerFichier(?string $fichier): void
     {
+        // si pas de nom de fichier, rien à faire
+        if ($fichier === null || $fichier === '') {
+            return;
+        }
+
         $chemin = self::DIR . '/' . $fichier;
         if (is_file($chemin)) {
             unlink($chemin);
         }
     }
 
-   public static function majLogo(int $id, string $logo): void
+    public static function majLogo(int $id, string $logo): void
     {
         $sql = "update partenaire set fichier = :logo where id = :id;";
         $db = Database::getInstance();
         $cmd = $db->prepare($sql);
         $cmd->bindValue('id', $id);
-        $cmd->bindValue('fichier', $logo);
+        $cmd->bindValue('logo', $logo);
         try {
             $cmd->execute();
         } catch (Exception $e) {

@@ -4,8 +4,8 @@
 // Import des fonctions nécessaires
 // -----------------------------------------------------------------------------------
 
-import {appelAjax} from "/composant/fonction/ajax.js";
-import {confirmer, messageBox, corriger} from "/composant/fonction/afficher.js";
+import { appelAjax } from "/composant/fonction/ajax.js";
+import { confirmer, messageBox, corriger } from "/composant/fonction/afficher.js";
 import {
     fichierValide, effacerLesErreurs,
     creerBoutonSuppression, creerBoutonRemplacer
@@ -17,9 +17,6 @@ import {
 
 /* global lesPartenaires, lesParametres */
 
-
-
-// ajouter : conserver l'id du partenaire en cours de remplacement
 let idEnCours;
 
 // récupération des éléments sur l'interface
@@ -30,6 +27,7 @@ const nb = document.getElementById('nb');
 // -----------------------------------------------------------------------------------
 // Procédures évènementielles
 // -----------------------------------------------------------------------------------
+
 
 // sur la sélection d'un logo
 logo.onchange = () => {
@@ -46,6 +44,10 @@ logo.onchange = () => {
 // Fonctions de traitement
 // -----------------------------------------------------------------------------------
 
+/**
+ * Ajoute la photo sélectionnée ou déposée
+ * @param {File} file
+ */
 function remplacer(file) {
     if (!idEnCours) {
         messageBox("Identifiant du partenaire manquant", "error");
@@ -53,7 +55,7 @@ function remplacer(file) {
     }
     // transfert du fichier vers le serveur dans le répertoire sélectionné
     const formData = new FormData();
-    formData.append('logo', file);
+    formData.append('fichier', file);
     formData.append('id', idEnCours);     // <-- envoi de l'id attendu par le PHP
     appelAjax({
         url: 'ajax/remplacer.php',
@@ -121,7 +123,7 @@ for (const p of lesPartenaires) {
         alignItems: 'center'
     });
 
-     const actionRemplacer = () => {
+    const actionRemplacer = () => {
         // mémorise l'id avant d'ouvrir le file picker
         idEnCours = id;
         logo.click();
@@ -197,7 +199,7 @@ for (const p of lesPartenaires) {
             if (this.value && !this.value.startsWith('http')) {
                 this.value = 'https://' + this.value;
             }
-            
+
             if (this.checkValidity() || this.value === '') {
                 modifierColonne('url', this, id);
             } else {

@@ -19,7 +19,7 @@ import {
 // -----------------------------------------------------------------------------------
 
 /* global lesParametres */
-let leLogo = null; // contient le fichier logo uploadé pour l'ajout
+let leLogo = null;
 
 const logo = document.getElementById('logo');
 const nomLogo = document.getElementById('nomLogo');
@@ -27,15 +27,16 @@ const nom = document.getElementById('nom');
 const url = document.getElementById('url');
 const btnLogo = document.getElementById('btnLogo');
 const btnAjouter = document.getElementById('btnAjouter');
+const msg = document.getElementById('msg');
 
 // -----------------------------------------------------------------------------------
 // Procédures évènementielles
 // -----------------------------------------------------------------------------------
 
-// Déclencher le clic sur le champ de type file lors d'un clic sur le bouton btnLogo
+// Ouvrir le file picker
 btnLogo.onclick = () => logo.click();
 
-// Lancer la fonction controlerLogo si un fichier a été sélectionné dans l'explorateur
+// Contrôler le fichier choisi
 logo.onchange = () => {
     if (logo.files.length > 0) {
         controlerLogo(logo.files[0]);
@@ -43,16 +44,20 @@ logo.onchange = () => {
 };
 
 btnAjouter.onclick = () => {
+    // Effacer les erreurs visuelles
     effacerLesErreurs();
-    // supprimer les espaces superflus dans le champ nom
+    // normaliser champs
     nom.value = nom.value.trim().replace(/\s+/g, ' ');
     url.value = url.value.trim();
-    
-    if (leLogo === null) {
+
+    if (leLogo === null && (lesParametres.require ?? false)) {
         afficherSousLeChamp('logo', 'Veuillez sélectionner un logo');
-    } else if (donneesValides()) {
-        ajouter();
+        return;
     }
+
+    if (!donneesValides()) return;
+
+    ajouter();
 };
 
 // -----------------------------------------------------------------------------------
@@ -63,16 +68,16 @@ btnAjouter.onclick = () => {
  * Contrôle le logo sélectionné au niveau de son extension et de sa taille
  * Affiche le nom du fichier dans la balise 'nomLogo' ou un message d'erreur sous le champ logo
  * Renseigne la variable globale leLogo
- * @param file Objet file téléversé
+ * @param {File} file
  */
 function controlerLogo(file) {
     effacerLesErreurs();
     if (fichierValide(file, lesParametres)) {
         nomLogo.textContent = file.name;
         leLogo = file;
-        // Si le nom est vide, proposer le nom du fichier sans extension comme nom de partenaire
         if (nom.value.length === 0) {
-            nom.value = file.name.replace(/\.[^/.]+$/, ""); // Retire l'extension
+            // proposer un nom à partir du nom du fichier sans extension
+            nom.value = file.name.replace(/\.[^/.]+$/, "");
         }
     } else {
         leLogo = null;
@@ -86,12 +91,13 @@ function controlerLogo(file) {
  */
 function ajouter() {
     let formData = new FormData();
-    formData.append('logo', leLogo);
+    // le serveur s'attend à la clé 'fichier' pour les uploads (convention utilisée ailleurs)
+    if (leLogo) formData.append('fichier', leLogo);
     formData.append('nom', nom.value);
     formData.append('url', url.value);
     
     appelAjax({
-        url: 'partenaire/ajax/ajouter.php',
+        url: 'ajax/ajouter.php',
         data: formData,
         success: () => {
             retournerVers("Partenaire ajouté", '..');
